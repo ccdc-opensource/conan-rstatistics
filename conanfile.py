@@ -17,7 +17,7 @@ class RConan(ConanFile):
     generators = "pkg_config"
     _source_subfolder = "source_subfolder"
     _autotools = None
-    windows_installer=f'R-{version}.exe'
+    windows_installer=f'R-{version}-win64.exe'
 
     def source(self):
         if self.settings.os_build == "Windows":
