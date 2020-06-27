@@ -11,6 +11,7 @@ extends:
     package: rstatistics
     package_version: 2.11.1
     destination_repository: ccdc-3rdparty-conan
+    artifactory_api_key: $(artifactory.api.key)
     build_types:
       - Release
     platforms:
