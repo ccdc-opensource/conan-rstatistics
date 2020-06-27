@@ -11,11 +11,10 @@ extends:
     package: rstatistics
     package_version: 2.11.1
     destination_repository: ccdc-3rdparty-conan
-    # macos_brew_preinstall:
-    #   - pkg-config
+    build_types:
+      - Release
     platforms:
+      - win2019_vs2019
       - centos7_gcc9
       - ubuntu2004_gcc10
       - macos1015_xcode11
-    build_types:
-      - Release
