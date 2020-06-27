@@ -1,0 +1,4 @@
+sources:
+  "2.11.1":
+    url: "https://cran.r-project.org/src/base/R-2/R-2.11.1.tar.gz"
+    sha256: "48c1b96426f5b588763652b0b633cadccf410bae34300c22fd40524662bc23bb"

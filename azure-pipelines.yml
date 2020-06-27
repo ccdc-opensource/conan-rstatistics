@@ -1,0 +1,21 @@
+resources:
+  repositories:
+    - repository: templates
+      type: git
+      name: ccdc-3rd-party/conan-azure-devops
+      ref: refs/heads/development
+
+extends:
+  template: third-party-library-all-platforms-from-local-recipe.yml@templates
+  parameters:
+    package: rstatistics
+    package_version: 2.11.1
+    destination_repository: ccdc-3rdparty-conan
+    # macos_brew_preinstall:
+    #   - pkg-config
+    platforms:
+      - centos7_gcc9
+      - ubuntu2004_gcc10
+      - macos1015_xcode11
+    build_types:
+      - Release
