@@ -17,22 +17,31 @@ class RConan(ConanFile):
     generators = "pkg_config"
     _source_subfolder = "source_subfolder"
     _autotools = None
+    windows_installer=f'R-{version}.exe'
 
     def source(self):
-        tools.get(**self.conan_data["sources"][self.version])
-        extrated_dir = "R-" + self.version
-        os.rename(extrated_dir, self._source_subfolder)
+        if self.settings.os_build == "Windows":
+            # Building on windows Is a royal pain... I'll just grab a build
+            tools.download(
+                url=f'https://artifactory.ccdc.cam.ac.uk:443/artifactory/ccdc-3rdparty-windows-runtime-exes/{self.windows_installer}',
+                filename=archive_name,
+                sha256='25b2718004134a5aa6339d29ec77f96b99abcb0760beebcce0d09811bdce3a42',
+                headers={
+                'X-JFrog-Art-Api': os.environ.get("ARTIFACTORY_API_KEY", None)
+            })
+        else:
+            tools.get(**self.conan_data["sources"][self.version])
+            extrated_dir = "R-" + self.version
+            os.rename(extrated_dir, self._source_subfolder)
 
     def build_requirements(self):
-        if self.settings.os_build == 'Windows':
-            if "CONAN_BASH_PATH" not in os.environ:
-                self.build_requires('msys2/20190524')
-        self.build_requires('automake/1.16.1')
-        self.build_requires('libjpeg/9d')
-        self.build_requires('xz_utils/5.2.4')
-        self.build_requires('libpng/1.6.37')
-        self.build_requires('libtiff/4.1.0')
-        self.build_requires('cairo/1.17.2')
+        if self.settings.os_build != 'Windows':
+            self.build_requires('automake/1.16.1')
+            self.build_requires('libjpeg/9d')
+            self.build_requires('xz_utils/5.2.4')
+            self.build_requires('libpng/1.6.37')
+            self.build_requires('libtiff/4.1.0')
+            self.build_requires('cairo/1.17.2')
 
     def system_requirements(self):
         installer = tools.SystemPackageTool()
@@ -75,50 +84,42 @@ class RConan(ConanFile):
         self._autotools.configure(configure_dir=self._source_subfolder, args=args, vars=envbuild_vars)
         return self._autotools
 
-    # def _patch_files(self):
-    #     #  - fontconfig requires libtool version number, change it for the corresponding freetype one
-    #     tools.replace_in_file(os.path.join(self._source_subfolder, 'configure'), '21.0.15', '2.8.1')
-
     def build(self):
-        # Patch files from dependencies
-        # self._patch_files()
-        env_build = RunEnvironment(self)
-        with tools.environment_append(env_build.vars):
-            try:
-                autotools = self._configure_autotools(env_build.vars)
-                autotools.make()
-            except:
-#                self.output.info(open('config.log', errors='backslashreplace').read())
-                raise
+        if self.settings.os_build == "Windows":
+            pass
 
-    def package(self):
-        self.copy("COPYING", dst="licenses", src=self._source_subfolder)
-        if tools.os_info.is_macos:
-            self.copy("/usr/local/opt/gcc/lib/gcc/9/libgfortran.5.dylib", dst="licenses")
-            self.copy("/usr/local/opt/gcc/lib/gcc/9/libquadmath.0.dylib", dst="lib/R/lib")
         env_build = RunEnvironment(self)
         with tools.environment_append(env_build.vars):
             autotools = self._configure_autotools(env_build.vars)
-            autotools.install()
-        # Fix paths in wrapper script
-        for r_filename, relative_path in [
-            ( os.path.join( 'bin', 'R'), '..' ),
-            ( os.path.join( 'bin', 'R64'), '..' ),
-            ( os.path.join( 'lib', 'R', 'bin', 'R'), '../../..'),
-            ( os.path.join( 'lib', 'R', 'bin', 'R64'), '../../..'),
-            ( os.path.join( 'lib64', 'R', 'bin', 'R'), '../../..'),
-            ( os.path.join( 'lib64', 'R', 'bin', 'R64'), '../../..'),
-            ]:
-            r_filename = os.path.join(self.package_folder, r_filename)
-            if not os.path.exists(r_filename):
-                continue
-            tools.replace_in_file(r_filename, 
-                'R_HOME_DIR=', 
-                f'R_INSTALL_DIR=`dirname $0`/{relative_path} \nR_HOME_DIR=')
-            print(f'replacing {os.path.abspath(str(self.package_folder))} in {r_filename}')
-            tools.replace_in_file(r_filename, os.path.abspath(str(self.package_folder)), '${R_INSTALL_DIR}')
+            autotools.make()
 
-        self.copy("COPYING", dst="licenses", src=self._source_subfolder)
+    def package(self):
+        if self.settings.os_build == "Windows":
+            tools.run(f'{self.windows_installer} /VERYSILENT /DIR={self.package_folder}')
+        else:
+            env_build = RunEnvironment(self)
+            with tools.environment_append(env_build.vars):
+                autotools = self._configure_autotools(env_build.vars)
+                autotools.install()
+
+            self.copy("COPYING", dst="licenses", src=self._source_subfolder)
+            # Fix paths in wrapper script
+            for r_filename, relative_path in [
+                ( os.path.join( 'bin', 'R'), '..' ),
+                ( os.path.join( 'bin', 'R64'), '..' ),
+                ( os.path.join( 'lib', 'R', 'bin', 'R'), '../../..'),
+                ( os.path.join( 'lib', 'R', 'bin', 'R64'), '../../..'),
+                ( os.path.join( 'lib64', 'R', 'bin', 'R'), '../../..'),
+                ( os.path.join( 'lib64', 'R', 'bin', 'R64'), '../../..'),
+                ]:
+                r_filename = os.path.join(self.package_folder, r_filename)
+                if not os.path.exists(r_filename):
+                    continue
+                tools.replace_in_file(r_filename, 
+                    'R_HOME_DIR=', 
+                    f'R_INSTALL_DIR=`dirname $0`/{relative_path} \nR_HOME_DIR=')
+                tools.replace_in_file(r_filename, os.path.abspath(str(self.package_folder)), '${R_INSTALL_DIR}')
+
         if tools.os_info.is_macos:
             self.copy("/usr/local/opt/gcc/lib/gcc/9/libgfortran.5.dylib", dst="lib/R/lib")
             self.copy("/usr/local/opt/gcc/lib/gcc/9/libquadmath.0.dylib", dst="lib/R/lib")
