@@ -89,7 +89,7 @@ class RConan(ConanFile):
 
     def package(self):
         if self.settings.os_build == "Windows":
-            tools.run(f'{self.windows_installer} /VERYSILENT /DIR={self.package_folder}')
+            self.run(f'{self.windows_installer} /VERYSILENT /DIR={self.package_folder}')
         else:
             env_build = RunEnvironment(self)
             with tools.environment_append(env_build.vars):
