@@ -80,7 +80,7 @@ class RConan(ConanFile):
 
     def build(self):
         if self.settings.os_build == "Windows":
-            pass
+            return
 
         env_build = RunEnvironment(self)
         with tools.environment_append(env_build.vars):
