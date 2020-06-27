@@ -16,5 +16,4 @@ extends:
     platforms:
       - win2019_vs2019
       - centos7_gcc9
-      - ubuntu2004_gcc10
       - macos1015_xcode11

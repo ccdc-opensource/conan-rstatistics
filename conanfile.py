@@ -24,7 +24,7 @@ class RConan(ConanFile):
             # Building on windows Is a royal pain... I'll just grab a build
             tools.download(
                 url=f'https://artifactory.ccdc.cam.ac.uk:443/artifactory/ccdc-3rdparty-windows-runtime-exes/{self.windows_installer}',
-                filename=archive_name,
+                filename=self.windows_installer,
                 sha256='25b2718004134a5aa6339d29ec77f96b99abcb0760beebcce0d09811bdce3a42',
                 headers={
                 'X-JFrog-Art-Api': os.environ.get("ARTIFACTORY_API_KEY", None)
@@ -46,18 +46,12 @@ class RConan(ConanFile):
     def system_requirements(self):
         installer = tools.SystemPackageTool()
         if tools.os_info.is_linux:
-            if tools.os_info.with_pacman or \
-                tools.os_info.with_yum:
-                installer.install("gcc-fortran")
+            if tools.os_info.with_yum:
+                installer.install(f"devtoolset-{self.settings.compiler.version.value}-gcc-gfortran")
             else:
                 installer.install("gfortran")
-                versionfloat = tools.Version(self.settings.compiler.version.value)
-                if self.settings.compiler == "gcc":
-                    if versionfloat < "5.0":
-                        installer.install("libgfortran-{}-dev".format(versionfloat))
-                    else:
-                        installer.install("libgfortran-{}-dev".format(int(versionfloat)))
-        if tools.os_info.is_macos and tools.Version(self.settings.compiler.version.value) > "7.3":
+                installer.install(f"libgfortran-{self.settings.compiler.version.value}-dev")
+        if tools.os_info.is_macos:
             try:
                 installer.install("gcc", update=True, force=True)
             except Exception:
@@ -123,6 +117,11 @@ class RConan(ConanFile):
         if tools.os_info.is_macos:
             self.copy("/usr/local/opt/gcc/lib/gcc/9/libgfortran.5.dylib", dst="lib/R/lib")
             self.copy("/usr/local/opt/gcc/lib/gcc/9/libquadmath.0.dylib", dst="lib/R/lib")
+        if tools.os_info.is_linux:
+            if tools.os_info.with_yum:
+                self.copy("/lib64/libgfortran.so.5", dst="lib/R/lib")
+                self.copy("/lib64/libquadmath.so.0", dst="lib/R/lib")
+                self.copy("/lib64/liblzma.so.5", dst="lib/R/lib")
 
         tools.rmdir(os.path.join(self.package_folder, "lib", "R", "doc"))
         tools.rmdir(os.path.join(self.package_folder, "share"))
