@@ -52,10 +52,13 @@ class RConan(ConanFile):
                 installer.install(f"libgfortran-{self.settings.compiler.version.value}-dev")
         if tools.os_info.is_macos:
             try:
-                installer.install("gcc", update=True, force=True)
+                installer.install("gcc@9", update=True, force=True)
             except Exception:
                 self.output.warn("brew install gcc failed. Tying to fix it with 'brew link'")
                 self.run("brew link --overwrite gcc")
+            if not os.path.islink('/usr/local/bin/gfortran'):
+                self.output.warn("Linking /usr/local/bin/gfortran -> gfortran-9")
+                os.symlink('gfortran-9', '/usr/local/bin/gfortran')
 
     def _configure_autotools(self, envbuild_vars):
         if self._autotools:
