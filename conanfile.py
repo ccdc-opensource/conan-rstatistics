@@ -117,8 +117,24 @@ class RConan(ConanFile):
                 tools.replace_in_file(r_filename, os.path.abspath(str(self.package_folder)), '${R_INSTALL_DIR}')
 
         if tools.os_info.is_macos:
-            self.copy("/usr/local/opt/gcc/lib/gcc/9/libgfortran.5.dylib", dst="lib/R/lib")
-            self.copy("/usr/local/opt/gcc/lib/gcc/9/libquadmath.0.dylib", dst="lib/R/lib")
+            # the package must be self consistent, otherwise scripts fail badly
+            gcc_pkg = "/usr/local/opt/gcc@9/lib/gcc/9"
+            self.copy("libgfortran.5.dylib", src=gcc_pkg, dst="lib/R/lib")
+            self.copy("libquadmath.0.dylib", src=gcc_pkg, dst="lib/R/lib")
+            for macho in [
+                'lib/R/bin/exec/R',
+                'lib/R/library/cluster/libs/cluster.so',
+                'lib/R/library/mgcv/libs/mgcv.so',
+                'lib/R/library/Matrix/libs/Matrix.so',
+                'lib/R/library/KernSmooth/libs/KernSmooth.so',
+                'lib/R/library/stats/libs/stats.so',
+                'lib/R/modules/lapack.so',
+                'lib/R/lib/libRlapack.dylib',
+            ]:
+                in_pkg = os.path.join(self.package_folder, macho)
+                self.run(f'/usr/bin/install_name_tool -change {gcc_pkg}/libgfortran.5.dylib @rpath/libgfortran.5.dylib {in_pkg}')
+                self.run(f'/usr/bin/install_name_tool -change {gcc_pkg}/libquadmath.0.dylib @rpath/libquadmath.0.dylib {in_pkg}')
+
         if tools.os_info.is_linux:
             if tools.os_info.with_yum:
                 self.copy("/lib64/libgfortran.so.5", dst="lib/R/lib")
