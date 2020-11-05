@@ -43,7 +43,6 @@ class RConan(ConanFile):
             self.build_requires('libtiff/4.1.0')
             self.build_requires('cairo/1.17.2')
 
-    def system_requirements(self):
         installer = tools.SystemPackageTool()
         if tools.os_info.is_linux:
             if tools.os_info.with_yum:
