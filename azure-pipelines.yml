@@ -14,7 +14,3 @@ extends:
     artifactory_api_key: $(artifactory.api.key)
     build_types:
       - Release
-    platforms:
-      - win2019_vs2019
-      - centos7_gcc9
-      - macos1015_xcode11
