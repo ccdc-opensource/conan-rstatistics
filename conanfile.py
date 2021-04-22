@@ -79,14 +79,10 @@ class RConan(ConanFile):
 
         # gcc 10 has made -fno-common default
         # see https://gcc.gnu.org/gcc-10/porting_to.html
-        v = tools.Version(str(self.settings.compiler.version))
-        if self.settings.compiler == "gcc" and (v >= "10"):
-            self._autotools.flags.append('-fcommon')
-        autotool_envvars = self._autotools.vars
-        if self.settings.compiler == "gcc" and (v >= "10"):
-            autotool_envvars['FFLAGS']='-std=legacy'
-        print(autotool_envvars)
-        with tools.environment_append(autotool_envvars):
+        with tools.environment_append({
+            'FFLAGS':'-std=legacy',
+            'CFLAGS':'-fcommon'
+            }):
             self._autotools.configure(configure_dir=self._source_subfolder, args=args, vars=envbuild_vars)
         return self._autotools
 
