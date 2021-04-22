@@ -36,11 +36,11 @@ class RConan(ConanFile):
 
     def build_requirements(self):
         if self.settings.os_build != 'Windows':
-            self.build_requires('automake/1.16.1')
+            self.build_requires('automake/1.16.2')
             self.build_requires('libjpeg/9d')
-            self.build_requires('xz_utils/5.2.4')
+            self.build_requires('xz_utils/5.2.5')
             self.build_requires('libpng/1.6.37')
-            self.build_requires('libtiff/4.1.0')
+            self.build_requires('libtiff/4.2.0')
             self.build_requires('cairo/1.17.2')
 
         installer = tools.SystemPackageTool()
