@@ -76,6 +76,9 @@ class RConan(ConanFile):
         ]
         if tools.os_info.is_macos:
             args.extend(['--disable-R-framework'])
+            
+        if self.settings.compiler == 'gcc' and self.settings.compiler.version >= 10:
+            self.autotools.flags.append('-fcommon')
 
         self._autotools.configure(configure_dir=self._source_subfolder, args=args, vars=envbuild_vars)
         return self._autotools
