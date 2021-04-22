@@ -81,7 +81,7 @@ class RConan(ConanFile):
         # see https://gcc.gnu.org/gcc-10/porting_to.html
         v = tools.Version(str(self.settings.compiler.version))
         if self.settings.compiler == "gcc" and (v >= "10.0"):
-            self.autotools.flags.append('-fcommon')
+            self._autotools.flags.append('-fcommon')
 
         self._autotools.configure(configure_dir=self._source_subfolder, args=args, vars=envbuild_vars)
         return self._autotools
